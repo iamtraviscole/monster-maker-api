@@ -4,7 +4,9 @@ class Api::MonstersController < ApplicationController
   # GET /monsters
   def index
     @monsters = Monster.all
-
+    if params[:user_id]
+      @monsters = @monsters.where(user_id: params[:user_id])
+    end
     render json: @monsters
   end
 
