@@ -1,6 +1,6 @@
 class Api::UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
-  before_action :authenticate_user
+  before_action :authenticate_user, except: [:create, :show, :check_email_avail, :check_username_avail]
 
   # GET /users
   def index
@@ -17,6 +17,7 @@ class Api::UsersController < ApplicationController
   # POST /users
   def create
     @user = User.new(user_params)
+    @user.email.downcase!
 
     if @user.save
       render json: @user, status: :created, location: api_user_path(@user)
@@ -39,6 +40,26 @@ class Api::UsersController < ApplicationController
     @user.destroy
   end
 
+  def check_email_avail
+    if params[:email]
+      email = params[:email].downcase
+      json = User.find_by(email: email) ? false : true
+      render json: json
+    else
+      render status: :bad_request
+    end
+  end
+
+  def check_username_avail
+    if params[:username]
+      username = params[:username].downcase
+      json = User.where('lower(username) = ?', username).first ? false : true
+      render json: json
+    else
+      render status: :bad_request
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
@@ -47,6 +68,6 @@ class Api::UsersController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def user_params
-      params.require(:user).permit(:username, :email, :password)
+      params.require(:user).permit(:username, :email, :password, :password_confirmation)
     end
 end
