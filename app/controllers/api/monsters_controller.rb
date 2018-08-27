@@ -1,5 +1,6 @@
 class Api::MonstersController < ApplicationController
   before_action :set_monster, only: [:show, :update, :destroy]
+  before_action :authenticate_user
 
   # GET /monsters
   def index
@@ -17,7 +18,7 @@ class Api::MonstersController < ApplicationController
 
   # POST /monsters
   def create
-    @monster = Monster.new(monster_params)
+    @monster = current_user.monsters.build(monster_params)
 
     if @monster.save
       render json: @monster, status: :created, location: api_monster_path(@monster)

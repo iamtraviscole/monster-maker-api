@@ -8,4 +8,5 @@ class User < ApplicationRecord
   validates :username, :email, format: { without: /\s/, message: "must contain no spaces" }
   validates :email, format: /@/
   validates :password, confirmation: {case_sensitive: true}
+  validates_length_of :username, within: 3..25, too_long: "too long", too_short: "too short"
 end
