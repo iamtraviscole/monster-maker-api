@@ -1,19 +1,32 @@
 class Api::MonstersController < ApplicationController
   before_action :set_monster, only: [:show, :update, :destroy]
-  before_action :authenticate_user
+  before_action :authenticate_user, except: [:index, :show]
 
   # GET /monsters
   def index
-    @monsters = Monster.all
-    if params[:user_id]
-      @monsters = @monsters.where(user_id: params[:user_id])
+    case params[:sort_by]
+      when 'newest'
+        @monsters = Monster.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
+        if params[:since]
+          @monsters = @monsters.where("created_at < ?", Time.at(params[:since]))
+        end
+      when 'oldest'
+        @monsters = Monster.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
+        if params[:since]
+          @monsters = @monsters.where("created_at < ?", Time.at(params[:since]))
+        end
     end
-    render json: @monsters
+
+    if !params[:sort_by]
+      render json: 'Missing params', status: :bad_request
+    else
+      render json: @monsters, include: {user: {only: :username}}
+    end
   end
 
   # GET /monsters/1
   def show
-    render json: @monster
+    render json: @monster, methods: :created_at_day_year, include: {user: {only: :username}}
   end
 
   # POST /monsters
