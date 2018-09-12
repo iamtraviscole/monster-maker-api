@@ -7,6 +7,8 @@ Rails.application.routes.draw do
     resources :monsters
     post 'user_token', to: 'user_token#create'
     get 'current_user_info', to: 'current_user#current_user_info'
+    post 'like', to: 'likes#like'
+    delete 'unlike', to: 'likes#unlike'
   end
 
 end

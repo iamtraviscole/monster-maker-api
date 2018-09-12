@@ -3,6 +3,8 @@ class User < ApplicationRecord
   has_many :monsters, dependent: :destroy
   has_many :unlocked_bodies
   has_many :bodies, through: :unlocked_bodies
+  has_many :likes, dependent: :destroy
+  has_many :liked_monsters, through: :likes, source: :monster
   validates :username, :email, :password, presence: true
   validates :username, :email, uniqueness: {case_sensitive: false}
   validates :username, :email, format: { without: /\s/, message: "must contain no spaces" }

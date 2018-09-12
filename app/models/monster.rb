@@ -1,5 +1,7 @@
 class Monster < ApplicationRecord
   belongs_to :user
+  has_many :likes, dependent: :destroy
+  has_many :liked_by, through: :likes, source: :user
   validates :body_type, presence: true
   validates_length_of :name, maximum: 25, message: 'too long'
   default_scope { order(created_at: :desc) }
