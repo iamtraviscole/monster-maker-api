@@ -6,21 +6,19 @@ class Api::MonstersController < ApplicationController
   def index
     case params[:sort_by]
       when 'newest'
-        @monsters = Monster.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
-        if params[:since]
-          @monsters = @monsters.where("created_at < ?", Time.at(params[:since]))
-        end
+        @monsters = Monster.unscoped.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
+        @monsters = Monster.sort_since(@monsters, params[:since]) if params[:since]
+        @monsters = Monster.sort_username(@monsters, params[:username]) if params[:username]
       when 'oldest'
-        @monsters = Monster.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
-        if params[:since]
-          @monsters = @monsters.where("created_at < ?", Time.at(params[:since]))
-        end
+        @monsters = Monster.unscoped.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
+        @monsters = Monster.sort_since(@monsters, params[:since]) if params[:since]
+        @monsters = Monster.sort_username(@monsters, params[:username]) if params[:username]
     end
 
     if !params[:sort_by]
       render json: 'Missing params', status: :bad_request
     else
-      render json: @monsters, include: {user: {only: :username}}
+      render json: params[:username] ? @monsters : @monsters, include: {user: {only: :username}}
     end
   end
 
