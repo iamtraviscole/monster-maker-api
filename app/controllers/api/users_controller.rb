@@ -11,7 +11,7 @@ class Api::UsersController < ApplicationController
 
   # GET /users/1
   def show
-    render json: @user, except: [:email, :password_digest], include: :monsters
+    render json: User.user_with_associations(@user)
   end
 
   # POST /users

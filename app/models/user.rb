@@ -11,4 +11,10 @@ class User < ApplicationRecord
   validates :email, format: /@/
   validates :password, confirmation: {case_sensitive: true}
   validates_length_of :username, within: 3..25, too_long: "too long", too_short: "too short"
+
+  def self.user_with_associations(user)
+    user_hash = user.as_json
+    user_hash['monsters'] = user.monsters.order(created_at: :desc)
+    user_hash
+  end
 end

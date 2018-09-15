@@ -4,11 +4,13 @@ class Api::MonstersController < ApplicationController
 
   # GET /monsters
   def index
+    @monsters = Monster.all.includes(:user, :liked_by)
+
     case params[:sort_by]
       when 'newest'
-        @monsters = Monster.unscoped.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
-        @monsters = Monster.sort_since(@monsters, params[:since]) if params[:since]
-        @monsters = Monster.sort_username(@monsters, params[:username]) if params[:username]
+        @monsters = @monsters.unscoped.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
+        @monsters = sort_since(@monsters, params[:since]) if params[:since]
+        @monsters = sort_username(@monsters, params[:username]) if params[:username]
       when 'oldest'
         @monsters = Monster.unscoped.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
         @monsters = Monster.sort_since(@monsters, params[:since]) if params[:since]
@@ -18,13 +20,13 @@ class Api::MonstersController < ApplicationController
     if !params[:sort_by]
       render json: 'Missing params', status: :bad_request
     else
-      render json: params[:username] ? @monsters : @monsters, include: {user: {only: :username}}
+      render json: Monster.monsters_with_associations(@monsters)
     end
   end
 
   # GET /monsters/1
   def show
-    render json: @monster, methods: :created_at_day_year, include: {user: {only: :username}}
+    render json: Monster.monster_with_associations(@monster)
   end
 
   # POST /monsters
