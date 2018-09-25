@@ -13,8 +13,29 @@ class User < ApplicationRecord
   validates_length_of :username, within: 3..25, too_long: "too long", too_short: "too short"
 
   def self.user_with_associations(user)
+    user_monsters = user.monsters.includes(:liked_by).order(created_at: :desc)
+    monsters_arr = []
+    user_monsters.each do |monster|
+      monsters_arr << add_assocations(monster)
+    end
     user_hash = user.as_json
-    user_hash['monsters'] = user.monsters.order(created_at: :desc)
+    user_hash.except!('email', 'password_digest')
+    user_hash['monsters'] = monsters_arr
     user_hash
   end
+
+  private
+
+  def self.add_assocations(monster)
+    monster_hash = monster.as_json
+    monster_hash['username'] = monster.user.username
+    monster_hash['liked_by'] = []
+    monster.liked_by.each do |user|
+      monster_hash['liked_by'] << user.username
+    end
+    monster_hash['created_at_day_year'] = monster.created_at_day_year
+    monster_hash['like_count'] = monster.liked_by.length
+    monster_hash
+  end
+
 end
