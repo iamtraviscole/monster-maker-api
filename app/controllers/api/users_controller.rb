@@ -1,6 +1,6 @@
 class Api::UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
-  before_action :authenticate_user, except: [:create, :show, :check_email_avail, :check_username_avail]
+  before_action :authenticate_user, only: [:update, :destroy]
 
   # GET /users
   def index

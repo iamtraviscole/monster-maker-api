@@ -4,17 +4,22 @@ class Api::MonstersController < ApplicationController
 
   # GET /monsters
   def index
-    @monsters = Monster.all.includes(:user, :liked_by)
+    all_monsters = Monster.all.includes(:user, :liked_by)
 
     case params[:sort_by]
       when 'newest'
-        @monsters = @monsters.unscoped.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
+        @monsters = all_monsters.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
         @monsters = sort_since(@monsters, params[:since]) if params[:since]
         @monsters = sort_username(@monsters, params[:username]) if params[:username]
       when 'oldest'
-        @monsters = Monster.unscoped.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
-        @monsters = Monster.sort_since(@monsters, params[:since]) if params[:since]
-        @monsters = Monster.sort_username(@monsters, params[:username]) if params[:username]
+        @monsters = all_monsters.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
+        @monsters = sort_since(@monsters, params[:since]) if params[:since]
+        @monsters = sort_username(@monsters, params[:username]) if params[:username]
+      when 'popular'
+        @monsters = Monster.left_outer_joins(:likes).group('monsters.id').order('count(monster_id) desc')
+          .limit(params[:limit]).offset(params[:offset])
+        @monsters = sort_since(@monsters, params[:since]) if params[:since]
+        @monsters = sort_username(@monsters, params[:username]) if params[:username]
     end
 
     if !params[:sort_by]

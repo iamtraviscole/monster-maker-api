@@ -14,7 +14,6 @@ class Api::LikesController < ApplicationController
 
   def unlike
     user = current_user
-    puts 'CURRENT USER', user.username
     like = user.likes.find_by(monster_id: params[:monster_id])
 
     if like.destroy
