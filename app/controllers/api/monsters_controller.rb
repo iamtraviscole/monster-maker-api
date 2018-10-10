@@ -4,22 +4,20 @@ class Api::MonstersController < ApplicationController
 
   # GET /monsters
   def index
-    all_monsters = Monster.all.includes(:user, :liked_by)
-
     case params[:sort_by]
       when 'newest'
-        @monsters = all_monsters.order(created_at: :desc).limit(params[:limit]).offset(params[:offset])
-        @monsters = sort_since(@monsters, params[:since]) if params[:since]
-        @monsters = sort_username(@monsters, params[:username]) if params[:username]
+        @monsters = Monster.order(created_at: :desc).limit(params[:limit])
+          .offset(params[:offset]).includes(:user, :liked_by, :tags)
+        @monsters = sort_monsters(@monsters, params)
       when 'oldest'
-        @monsters = all_monsters.order(created_at: :asc).limit(params[:limit]).offset(params[:offset])
-        @monsters = sort_since(@monsters, params[:since]) if params[:since]
-        @monsters = sort_username(@monsters, params[:username]) if params[:username]
+        @monsters = Monster.order(created_at: :asc).limit(params[:limit])
+          .offset(params[:offset]).includes(:user, :liked_by, :tags)
+        @monsters = sort_monsters(@monsters, params)
       when 'popular'
-        @monsters = Monster.left_outer_joins(:likes).group('monsters.id').order('count(monster_id) desc')
-          .limit(params[:limit]).offset(params[:offset])
-        @monsters = sort_since(@monsters, params[:since]) if params[:since]
-        @monsters = sort_username(@monsters, params[:username]) if params[:username]
+        @monsters = Monster.left_joins(:likes).group(:id)
+          .order('COUNT(monsters.id) DESC').limit(params[:limit])
+          .offset(params[:offset]).includes(:user, :liked_by, :tags)
+        @monsters = sort_monsters(@monsters, params)
     end
 
     if !params[:sort_by]
@@ -39,6 +37,10 @@ class Api::MonstersController < ApplicationController
     @monster = current_user.monsters.build(monster_params)
 
     if @monster.save
+      tag_params['names'].each do |name|
+        @monster.tags << Tag.where(name: name).first_or_create
+      end
+
       render json: @monster, status: :created, location: api_monster_path(@monster)
     else
       render json: @monster.errors, status: :unprocessable_entity
@@ -78,5 +80,26 @@ class Api::MonstersController < ApplicationController
         :left_arm_type, :left_arm_fill,
         :legs_type, :legs_fill
       )
+    end
+
+    def tag_params
+      params.require(:tags).permit(names: [])
+    end
+
+    def sort_monsters(monsters, params)
+      sorted_monsters = monsters
+      if params[:since]
+        sorted_monsters.where('created_at < ?', Time.at(params[:since]))
+      end
+      if params[:username]
+        sorted_monsters.where(user: User.where(username: params[:username]))
+      end
+      if params[:search]
+        search_term = '%' + params[:search].strip + '%'
+        monsters.left_joins(:user, :tags)
+          .where('users.username LIKE ? OR monsters.name LIKE ? OR tags.name LIKE ?',
+          search_term, search_term, search_term).distinct
+      end
+      sorted_monsters
     end
 end
