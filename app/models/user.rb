@@ -12,8 +12,9 @@ class User < ApplicationRecord
   validates :password, confirmation: {case_sensitive: true}
   validates_length_of :username, within: 3..25, too_long: "too long", too_short: "too short"
 
+# faster to override as_json method and use include instead of doing this?
   def self.user_with_associations(user)
-    user_monsters = user.monsters.includes(:liked_by).order(created_at: :desc)
+    user_monsters = user.monsters.includes(:liked_by, :tags).order(created_at: :desc)
     monsters_arr = []
     user_monsters.each do |monster|
       monsters_arr << add_assocations(monster)
@@ -35,6 +36,10 @@ class User < ApplicationRecord
     end
     monster_hash['created_at_day_year'] = monster.created_at_day_year
     monster_hash['like_count'] = monster.liked_by.length
+    monster_hash['tags'] = []
+    monster.tags.each do |tag|
+      monster_hash['tags'] << tag.name
+    end
     monster_hash
   end
 
