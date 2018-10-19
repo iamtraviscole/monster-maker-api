@@ -37,10 +37,6 @@ class Api::MonstersController < ApplicationController
     @monster = current_user.monsters.build(monster_params)
 
     if @monster.save
-      tag_params['names'].each do |name|
-        @monster.tags << Tag.where(name: name).first_or_create
-      end
-
       render json: @monster, status: :created, location: api_monster_path(@monster)
     else
       render json: @monster.errors, status: :unprocessable_entity
@@ -49,8 +45,11 @@ class Api::MonstersController < ApplicationController
 
   # PATCH/PUT /monsters/1
   def update
-    if @monster.update(monster_params)
-      render json: @monster
+    monst_params = monster_params.clone
+    monst_params.delete(:tags_attributes) if !tags_changed?(monst_params, @monster)
+
+    if @monster.update(monst_params)
+      render json: Monster.monster_with_associations(@monster)
     else
       render json: @monster.errors, status: :unprocessable_entity
     end
@@ -78,7 +77,8 @@ class Api::MonstersController < ApplicationController
         :mouth_type, :mouth_fill,
         :right_arm_type, :right_arm_fill,
         :left_arm_type, :left_arm_fill,
-        :legs_type, :legs_fill
+        :legs_type, :legs_fill,
+        tags_attributes: [names: []]
       )
     end
 
@@ -96,10 +96,26 @@ class Api::MonstersController < ApplicationController
       end
       if params[:search]
         search_term = '%' + params[:search].strip + '%'
-        monsters.left_joins(:user, :tags)
+        sorted_monsters = monsters.left_joins(:user, :tags)
           .where('users.username LIKE ? OR monsters.name LIKE ? OR tags.name LIKE ?',
           search_term, search_term, search_term).distinct
       end
       sorted_monsters
     end
+
+    def tags_changed?(params, monster)
+      param_tags = params[:tags_attributes][:names]
+      monster_tags = monster.tags.map {|tag| tag.name}
+      if param_tags.length != monster_tags.length
+        return true
+      elsif
+        param_tags.each_with_index do |param_tag, i|
+         if param_tags[i] != monster_tags[i]
+           return true
+         end
+        end
+      end
+      false
+    end
+
 end

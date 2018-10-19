@@ -7,6 +7,13 @@ class Monster < ApplicationRecord
   validates :body_type, presence: true
   validates_length_of :name, maximum: 25, message: 'too long'
 
+  def tags_attributes=(tags)
+    self.tags.delete_all
+    tags['names'].each do |tag_name|
+      self.tags << Tag.where(name: tag_name).first_or_create
+    end
+  end
+
   def created_at_day_year
     self.created_at.strftime('%b %e, %Y')
   end
