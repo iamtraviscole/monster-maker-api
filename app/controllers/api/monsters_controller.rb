@@ -29,7 +29,11 @@ class Api::MonstersController < ApplicationController
 
   # GET /monsters/1
   def show
-    render json: Monster.monster_with_associations(@monster)
+    if @monster
+      render json: Monster.monster_with_associations(@monster)
+    else
+      render status: :not_found
+    end
   end
 
   # POST /monsters

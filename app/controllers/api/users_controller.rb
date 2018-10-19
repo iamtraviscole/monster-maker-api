@@ -11,7 +11,12 @@ class Api::UsersController < ApplicationController
 
   # GET /users/1
   def show
-    render json: User.user_with_associations(@user)
+    puts @user
+    if @user
+      render json: User.user_with_associations(@user)
+    else
+      render status: :not_found
+    end
   end
 
   # POST /users
