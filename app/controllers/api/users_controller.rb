@@ -1,5 +1,5 @@
 class Api::UsersController < ApplicationController
-  before_action :set_user, only: [:show, :update, :destroy]
+  before_action :set_user, only: [:show, :likes, :update, :destroy]
   before_action :authenticate_user, only: [:update, :destroy]
 
   # GET /users
@@ -11,7 +11,6 @@ class Api::UsersController < ApplicationController
 
   # GET /users/1
   def show
-    puts @user
     if @user
       render json: User.user_with_associations(@user)
     else

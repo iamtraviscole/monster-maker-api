@@ -21,6 +21,7 @@ class User < ApplicationRecord
     end
     user_hash = user.as_json
     user_hash.except!('email', 'password_digest')
+    user_hash['liked_monsters'] = user.liked_monsters.order(created_at: :desc)
     user_hash['monsters'] = monsters_arr
     user_hash
   end

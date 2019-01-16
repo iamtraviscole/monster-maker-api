@@ -14,7 +14,7 @@ class Api::MonstersController < ApplicationController
           .offset(params[:offset]).includes(:user, :liked_by, :tags)
         @monsters = sort_monsters(@monsters, params)
       when 'popular'
-        @monsters = Monster.left_joins(:likes).group(:id)
+        @monsters = Monster.joins(:likes).group(:id)
           .order('COUNT(monsters.id) DESC').limit(params[:limit])
           .offset(params[:offset]).includes(:user, :liked_by, :tags)
         @monsters = sort_monsters(@monsters, params)
