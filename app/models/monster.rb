@@ -31,6 +31,15 @@ class Monster < ApplicationRecord
     add_assocations(monster)
   end
 
+  def self.monsters_since(date)
+    if date
+      utc_date = Time.at(date.to_i)
+      self.where('monsters.created_at < ?', utc_date)
+    else
+      self.all
+    end
+  end
+
   private
 
   def self.add_assocations(monster)

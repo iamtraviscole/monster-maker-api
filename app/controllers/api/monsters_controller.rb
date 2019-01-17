@@ -6,15 +6,18 @@ class Api::MonstersController < ApplicationController
   def index
     case params[:sort_by]
       when 'newest'
-        @monsters = Monster.order(created_at: :desc).limit(params[:limit])
+        @monsters = Monster.monsters_since(params[:since])
+          .order(created_at: :desc).limit(params[:limit])
           .offset(params[:offset]).includes(:user, :liked_by, :tags)
         @monsters = sort_monsters(@monsters, params)
       when 'oldest'
-        @monsters = Monster.order(created_at: :asc).limit(params[:limit])
+        @monsters = Monster.monsters_since(params[:since])
+          .order(created_at: :asc).limit(params[:limit])
           .offset(params[:offset]).includes(:user, :liked_by, :tags)
         @monsters = sort_monsters(@monsters, params)
       when 'popular'
-        @monsters = Monster.joins(:likes).group(:id)
+        @monsters = Monster.monsters_since(params[:since])
+          .joins(:likes).group(:id)
           .order('COUNT(monsters.id) DESC').limit(params[:limit])
           .offset(params[:offset]).includes(:user, :liked_by, :tags)
         @monsters = sort_monsters(@monsters, params)
@@ -92,9 +95,6 @@ class Api::MonstersController < ApplicationController
 
     def sort_monsters(monsters, params)
       sorted_monsters = monsters
-      if params[:since]
-        sorted_monsters.where('created_at < ?', Time.at(params[:since]))
-      end
       if params[:username]
         sorted_monsters.where(user: User.where(username: params[:username]))
       end
