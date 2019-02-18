@@ -1,4 +1,6 @@
 class Api::UsersController < ApplicationController
+  include ReservedPaths
+
   before_action :set_user, only: [:show, :likes, :update, :destroy]
   before_action :authenticate_user, only: [:update, :destroy]
 
@@ -56,9 +58,16 @@ class Api::UsersController < ApplicationController
 
   def check_username_avail
     if params[:username]
-      username = params[:username].downcase
-      json = User.where('lower(username) = ?', username).first ? false : true
-      render json: json
+      def username_avail?
+        username = params[:username].downcase
+        if User.where('lower(username) = ?', username).first ||
+          ReservedPaths.paths.include?(username)
+          false
+        else
+          true
+        end
+      end
+      render json: username_avail?
     else
       render status: :bad_request
     end

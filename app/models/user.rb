@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include ReservedPaths
+
   has_secure_password
   has_many :monsters, dependent: :destroy
   has_many :unlocked_bodies
@@ -6,11 +8,12 @@ class User < ApplicationRecord
   has_many :likes, dependent: :destroy
   has_many :liked_monsters, through: :likes, source: :monster
   validates :username, :email, :password, presence: true
-  validates :username, :email, uniqueness: {case_sensitive: false}
+  validates :username, :email, uniqueness: { case_sensitive: false }
   validates :username, :email, format: { without: /\s/, message: "must contain no spaces" }
   validates :email, format: /@/
-  validates :password, confirmation: {case_sensitive: true}
+  validates :password, confirmation: { case_sensitive: true }
   validates_length_of :username, within: 3..25, too_long: "too long", too_short: "too short"
+  validates :username, exclusion: { in: ReservedPaths.paths }
 
 # faster to override as_json method and use include instead of doing this?
   def self.user_with_associations(user)
