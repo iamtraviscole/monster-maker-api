@@ -10,6 +10,7 @@ class Monster < ApplicationRecord
   def tags_attributes=(tags)
     self.tags.delete_all
     tags['names'].each do |tag_name|
+      tag_name.gsub!(/[\W_]+/, '')
       self.tags << Tag.where(name: tag_name).first_or_create
     end
   end

@@ -89,10 +89,6 @@ class Api::MonstersController < ApplicationController
       )
     end
 
-    def tag_params
-      params.require(:tags).permit(names: [])
-    end
-
     def sort_monsters(monsters, params)
       sorted_monsters = monsters
       if params[:username]
